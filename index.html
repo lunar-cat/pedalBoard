@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/style/css/style.css">
+    <title>Pedals</title>
+</head>
+
+<body>
+
+    <audio id="audio-sample">
+        <source src="/sample/guitarra.mp3" type="audio/mpeg">
+        Tu navegador no soporta el elemento de audio.
+    </audio>
+
+    <button data-play="off" role="switch" aria-pressed="false" id="play-btn">
+        <span>PLAY/PAUSE</span>
+    </button>
+
+    <label for="vol-range">
+        <span>Volumen: </span><span id="label-vol-value">1</span>
+    </label><br>
+
+    <div class="vol-container" style="width: min-content;">
+        <input type="range" name="vol-range" id="vol-range" list="vol-list" min="0" max="2" step="0.5">
+        <datalist id="vol-list" style="display: flex; width: 100%; justify-content: space-between;">
+            <option value="0" label="0"></option>
+            <option value="0.5"></option>
+            <option value="1" label="1"></option>
+            <option value="1.5"></option>
+            <option value="2" label="2"></option>
+        </datalist>
+
+    </div>
+
+
+    <!--Script-->
+    <script src="/scripts/app.js"></script>
+</body>
+
+</html>
