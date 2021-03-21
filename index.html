@@ -9,33 +9,60 @@
     <title>Pedals</title>
 </head>
 
-<body>
+<body class="flex flex-fd-c flex-jc-se flex-ai-c">
+    <div class="sample-container">
+        Muestra de Audio
+        <audio id="audio-sample">
+            <source src="/sample/guitarra.mp3" type="audio/mpeg">
+            Tu navegador no soporta el elemento de audio.
+        </audio>
 
-    <audio id="audio-sample">
-        <source src="/sample/guitarra.mp3" type="audio/mpeg">
-        Tu navegador no soporta el elemento de audio.
-    </audio>
+        <div class="sample-controls-container">
+            <button data-play="off" role="switch" aria-pressed="false" id="play-btn">
+                <span>PLAY/PAUSE</span>
+            </button>
 
-    <button data-play="off" role="switch" aria-pressed="false" id="play-btn">
-        <span>PLAY/PAUSE</span>
-    </button>
-
-    <label for="vol-range">
-        <span>Volumen: </span><span id="label-vol-value">1</span>
-    </label><br>
-
-    <div class="vol-container" style="width: min-content;">
-        <input type="range" name="vol-range" id="vol-range" list="vol-list" min="0" max="2" step="0.5">
-        <datalist id="vol-list" style="display: flex; width: 100%; justify-content: space-between;">
-            <option value="0" label="0"></option>
-            <option value="0.5"></option>
-            <option value="1" label="1"></option>
-            <option value="1.5"></option>
-            <option value="2" label="2"></option>
-        </datalist>
-
+            <div class="vol-container" style="width: min-content;">
+                <label for="vol-range">
+                    <span>Volumen: </span><span id="label-vol-value">1</span>
+                </label>
+                <input type="range" name="vol-range" id="vol-range" min="0" max="2" step="0.1" value="1">
+            </div>
+        </div>
     </div>
 
+    <div class="pedalboard-container">
+
+        <div class="distortion-container effect-container flex flex-fd-c flex-jc-sb">
+            <label for="distortion-curve">Nivel de Distorsión: <span id="distortion-level-value">0</span></label>
+            <input type="range" name="distortion-curve" id="distortion-curve-input">
+            <button type="button" id="distortion-button" class="effect-btn" data-on="false"  data-name="distortion" data-order="2">ON/OFF</button>
+        </div>
+
+        <div class="filter-container effect-container flex flex-fd-c flex-jc-sb">
+            <label for="filter-type">Tipo de Filtro</label>
+            <select name="filter-type" id="filter-type">
+                <option value="lowpass">LowPass</option>
+                <option value="highpass">HighPass</option>
+                <option value="bandpass">BandPass</option>
+                <option value="lowshelf">LowShelf</option>
+                <option value="highshelf">HighShelf</option>
+                <option value="peaking">Peaking</option>
+                <option value="notch">Notch</option>
+                <option value="allpass">AllPass</option>
+            </select>
+            <label for="filter-freq-input">Nivel de Frecuencia: <span id="filter-freq-value">0</span></label>
+            <input type="range" name="filter-freq-input" id="filter-freq-input" min="0" max="10000" step="1" value="0">
+
+            <label for="filter-q-input">Nivel de Q: <span id="filter-q-value">0</span></label>
+            <input type="range" name="filter-q-input" id="filter-q-input" min="0" max="100" step="1" value="0">
+
+            <label for="filter-gain-input">Nivel de Ganancia: <span id="filter-gain-value">0</span></label>
+            <input type="range" name="filter-gain-input" id="filter-gain-input" min="-40" max="40" step="1" value="0">
+
+            <button type="button" id="filter-button" class="effect-btn" data-on="false" data-name="filter" data-order="1">ON/OFF</button>
+        </div>
+    </div>
 
     <!--Script-->
     <script src="/scripts/app.js"></script>

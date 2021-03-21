@@ -1,58 +1,18 @@
-/* Workflow =>
-
-1.- Create audio context
-2.- Inside context, create sources (such as <audio>)
-3.- Create effects nodes
-4.- Choose final destination of the audio, normally system speakers
-5.- Connect the sources to the effects, and the effects to the destination
-*/
-
 const audioElement = document.getElementById('audio-sample');
 const playBtn = document.getElementById('play-btn');
 const volumenInput = document.getElementById('vol-range');
 const labelVolumeValue = document.getElementById('label-vol-value');
+let audioContext, track, gainNode;
 
-const audioContext = new AudioContext(); // crea un BaseAudioContext
-/* Si quisiéramos procesar audio-data pero offline como buffer, es mejor crear
-un OfflineAudioContext() */
-
-// Ahora necesitamos darle audio al contexto, para eso tomamos le audioElement
-// Si el audio es de otro dominio, el <audio> element necesita el "crossorigin" attribute
-
-const track = audioContext.createMediaElementSource(audioElement); // Acá pasamos el audio
-
-/* Acá creamos y conectamos un nodo de ganancia */
-const gainNode = audioContext.createGain(); // también se puede crear con new GainNode(audioContext, options)
-const panner = new StereoPannerNode(audioContext, { pan: 0 }); // acepta valores desde -1(izq) a 1(derecha). Siendo 0 el medio
-
-
-const distortion = audioContext.createWaveShaper();
-
-function makeDistortionCurve(amount) {
-    var k = typeof amount === 'number' ? amount : 50,
-        n_samples = 44100,
-        curve = new Float32Array(n_samples),
-        deg = Math.PI / 180,
-        i = 0,
-        x;
-    for (; i < n_samples; ++i) {
-        x = i * 2 / n_samples - 1;
-        curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
+function playSample() {
+    if (audioContext === undefined) audioContext = new AudioContext();
+    else if (audioContext?.state === 'suspended') audioContext.resume();
+    if (track === undefined) {
+        track = audioContext.createMediaElementSource(audioElement);
+        gainNode = audioContext.createGain();
+        track.connect(audioContext.destination);
     }
-    return curve;
 };
-distortion.curve = makeDistortionCurve(400);
-distortion.oversample = '4x';
-
-const biquadFilter = new BiquadFilterNode(audioContext);
-biquadFilter.type = "lowpass";
-biquadFilter.frequency.setValueAtTime(700, audioContext.currentTime);
-
-
-
-// Se conecta el audio graph del audio souce/input al nodo de ganancia, y luego al de salida
-track.connect(gainNode).connect(biquadFilter).connect(distortion).connect(audioContext.destination);
-
 playBtn.addEventListener('click', function () {
     let arrProps = [['on', 'off'], ['true', 'false']];
     let option = (playBtn.dataset.play === 'off') ? 0 : 1;
@@ -60,7 +20,7 @@ playBtn.addEventListener('click', function () {
     playBtn.setAttribute('aria-pressed', arrProps[1][option]);
 });
 playBtn.addEventListener('click', function () {
-    if (audioContext.state === 'suspended') audioElement.resume();
+    playSample();
     if (playBtn.dataset.play === 'on') audioElement.play();
     else audioElement.pause();
 });
@@ -72,3 +32,106 @@ volumenInput.addEventListener('input', function () {
     gainNode.gain.value = this.value;
     labelVolumeValue.textContent = this.value;
 });
+
+// Effects UI
+const effectsButtons = document.getElementsByClassName('effect-btn');
+Array.from(effectsButtons).forEach(btn => {
+    btn.addEventListener('click', function () {
+        btn.dataset.on = (btn.dataset.on === 'true')
+            ? 'false'
+            : 'true';
+    });
+});
+const filterType = document.getElementById('filter-type');
+const filterFreqInput = document.getElementById('filter-freq-input');
+const filterFreqInputValue = document.getElementById('filter-freq-value');
+const filterQInput = document.getElementById('filter-q-input');
+const filterQInputValue = document.getElementById('filter-q-value');
+const filterGainInput = document.getElementById('filter-gain-input');
+const filterGainInputValue = document.getElementById('filter-gain-value');
+
+filterType.addEventListener('input', function () {
+    if (audioContext === undefined) return;
+    biquadFilter.type = this.value
+});
+filterFreqInput.addEventListener('input', function () {
+    if (audioContext === undefined) return;
+    filterFreqInputValue.textContent = this.value;
+    biquadFilter.frequency.setValueAtTime(+this.value, audioContext.currentTime);
+});
+filterQInput.addEventListener('input', function () {
+    if (audioContext === undefined) return;
+    filterQInputValue.textContent = this.value;
+    biquadFilter.Q.setValueAtTime(+this.value, audioContext.currentTime);
+});
+filterGainInput.addEventListener('input', function () {
+    if (audioContext === undefined) return;
+    filterGainInputValue.textContent = this.value;
+    biquadFilter.gain.setValueAtTime(+this.value, audioContext.currentTime);
+});
+
+// Connect & Disconnect Effects
+
+// Filter Fx
+const filterBtn = document.getElementById('filter-button');
+let biquadFilter;
+filterBtn.addEventListener('click', function () {
+    if (audioContext === undefined) return;
+    if (biquadFilter === undefined) {
+        biquadFilter = new BiquadFilterNode(audioContext);
+    }
+    if (this.dataset.on === "true") {
+        connectEffects();
+    } else {
+        track.disconnect();
+        track.connect(audioContext.destination);
+    }
+});
+function connectEffects() {
+    let effectsOn = [];
+    Array.from(effectsButtons).forEach(btn => {
+        if (btn.dataset.on === 'true') {    
+            let btnType = (btn.dataset.name === 'filter')
+                 ? biquadFilter
+                 : biquadFilter;
+            let effectObject = { 'btnOrder': +btn.dataset.order, 'btnType' : btnType};
+            effectsOn.push(effectObject);
+        }
+    });
+    effectsOn.sort((a, b) => b.btnOrder - a.btnOrder);
+    track.disconnect();
+    let lastObject = track;
+    for (let index = 0; index < effectsOn.length; index++) {
+        let fx = effectsOn[index].btnType;
+        lastObject.connect(fx);
+        lastObject = fx;
+        if (index + 1 ===  effectsOn.length) lastObject.connect(audioContext.destination);
+    };
+    
+}
+/* Quizá lo más correcto, sería tener estas funciones que creen los nodos de filtros y efectos
+pero otra que detecte cuáles de los pedales tienen el valor del data-set-on y que según ello
+pues vaya conectando */
+/* podría agregar un dataset con el valor del orden en que debería ser conectado ese pedal al track
+meterlos al array de effectson hacer un sort por ese valor, y luego ir conectando forEach
+y una vez termine conectar al audiocontext.destination */
+/*
+
+const distortion = audioContext.createWaveShaper();
+
+function makeDistortionCurve(amount) {
+    let k = (typeof amount === 'number')
+        ? amount
+        : 50;
+    let n_samples = 44100;
+    let curve = new Float32Array(n_samples);
+    const DEG = Math.PI / 180
+    let x = 0;
+    for (let i = 0; i < n_samples; ++i) {
+        x = i * 2 / n_samples - 1;
+        curve[i] = (3 + k) * x * 20 * DEG / (Math.PI + k * Math.abs(x));
+    }
+    return curve;
+};
+distortion.curve = makeDistortionCurve(0);
+distortion.oversample = '4x'; */

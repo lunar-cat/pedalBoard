@@ -1,12 +1,8 @@
 {
     "editor.fontSize": 15,
-    "workbench.colorTheme": "One Dark Pro",
+    "workbench.colorTheme": "Atom One Dark",
     "terminal.integrated.minimumContrastRatio": 7,
-    "oneDarkPro.vivid": true,
-    "editor.tokenColorCustomizations": {
-        "comments": "#dfdfdf"
-    },
-
+    "editor.fontWeight": "bold",
     "liveSassCompile.settings.formats":[
         {
             "format": "expanded",

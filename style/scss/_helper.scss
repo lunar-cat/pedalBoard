@@ -1,0 +1,8 @@
+.flex {
+    display: flex;
+    &-ai-c {align-items: center;}
+    &-jc-sb {justify-content: space-between;}
+    &-jc-se {justify-content: space-evenly;}
+    &-jc-c {justify-content: center;}
+    &-fd-c {flex-direction: column;}
+}
